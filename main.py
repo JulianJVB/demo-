@@ -14,6 +14,7 @@ import random
 from settings import *
 from sprites import *
 from os import path
+import time
 
 class Game:
     def __init__(self):
@@ -53,9 +54,10 @@ class Game:
         self.snd_dir = path.join(self.dir, 'snd')
         self.jump_sound = [pg.mixer.Sound(path.join(self.snd_dir, 'Jump18.wav')),
                             pg.mixer.Sound(path.join(self.snd_dir, 'Jump24.wav'))]
-        self.boost_sound = pg.mixer.Sound(path.join(self.snd_dir, 'Jump29.wav'))
+        self.boost_sound = pg.mixer.Sound(path.join(self.snd_dir, 'moneyReal.wav'))
         #Sound for when you hit the evil bird things
-        self.birdy_sound = pg.mixer.Sound(path.join(self.snd_dir, 'Flightless.ogg'))
+        self.birdy_sound = pg.mixer.Sound(path.join(self.snd_dir, 'Jump29.wav'))
+        self.birdyLeft_sound = pg.mixer.Sound(path.join(self.snd_dir, 'mario.wav'))
 
                             
     def new(self):
@@ -68,7 +70,9 @@ class Game:
         self.platforms = pg.sprite.Group()
         # add powerups
         self.powerups = pg.sprite.Group()
-        
+        self.gold = pg.sprite.Group()
+        self.coin = pg.sprite.Group()
+        self.cactus = pg.sprite.Group()
         self.mob_timer = 0
         # add a player 1 to the group
         self.player = Player(self)
@@ -85,7 +89,7 @@ class Game:
             # self.all_sprites.add(p)
             # self.platforms.add(p)
         # load music
-        pg.mixer.music.load(path.join(self.snd_dir, 'happy.ogg'))
+        pg.mixer.music.load(path.join(self.snd_dir, 'Background.mp3'))
         # call the run method
         self.run()
     def run(self):
@@ -116,10 +120,12 @@ class Game:
                 print("player is " + str(self.player.pos.y))
                 print("mob is " + str(mob_hits[0].rect_top))
                 self.player.vel.y = -BOOST_POWER
+                self.birdy_sound.play()
             else:
                 print("player is " + str(self.player.pos.y))
                 print("mob is " + str(mob_hits[0].rect_top))
                 self.playing = False
+                self.birdyLeft_sound.play()
 
         # check to see if player can jump - if falling
         if self.player.vel.y > 0:
@@ -151,6 +157,8 @@ class Game:
                 if plat.rect.top >= HEIGHT + 40:
                     plat.kill()
                     self.score += 10
+            for Cactus in self.cactus:
+                Cactus.rect.y += max(abs(self.player.vel.y), 2)
         # if player hits a power up
         pow_hits = pg.sprite.spritecollide(self.player, self.powerups, True)
         for pow in pow_hits:
@@ -158,8 +166,28 @@ class Game:
                 self.boost_sound.play()
                 self.player.vel.y = -BOOST_POWER
                 self.player.jumping = False
+        # if player gets a coin
+        coin_hits = pg.sprite.spritecollide(self.player, self.coin, True)
+        for coin in coin_hits:
+            if coin.type == 'coin':
+                self.boost_sound.play()
+                self.player.vel.y = -10
+                self.score += 10
+        #if player gets the gold powerup
+        gold_hits = pg.sprite.spritecollide(self.player, self.gold, True)
+        for gold in gold_hits:
+            if gold.type == 'gold':
+                self.boost_sound.play()
+                self.player.vel.y = -10
+                self.score += 10 
+        #if player hits the bad, evil, no good, very bad cactus
+        cactus_hits = pg.sprite.spritecollide(self.player, self.cactus, True)
+        for cactus in cactus_hits:
+            if cactus.type == 'cactus':
+                self.playing = False
+                self.birdyLeft_sound.play()
         
-        # Die!
+        # Die
         if self.player.rect.bottom > HEIGHT:
             for sprite in self.all_sprites:
                 sprite.rect.y -= max(self.player.vel.y, 10)
@@ -207,7 +235,7 @@ class Game:
                 if event.type == pg.QUIT:
                     waiting = False
                     self.running = False
-                if event.type ==pg.KEYUP:
+                if event.type == pg.KEYUP:
                     waiting = False
     def show_start_screen(self):
         # game splash screen
