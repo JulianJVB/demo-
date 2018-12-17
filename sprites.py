@@ -101,10 +101,19 @@ class Player(Sprite):
         # check pixel below
         self.rect.y += 2
         hits = pg.sprite.spritecollide(self, self.game.platforms, False)
+        mhits = pg.sprite.spritecollide(self, self.game.movingplatform, False)
         # adjust based on checked pixel
         self.rect.y -= 2
         # only allow jumping if player is on platform
         if hits and not self.jumping:
+            # play sound only when space bar is hit and while not jumping
+            self.game.jump_sound[choice([0,1])].play()
+            # tell the program that player is currently jumping
+            self.jumping = True
+            self.vel.y = -PLAYER_JUMP
+            print(self.acc.y)
+        #When it is jumping for the moving platform 
+        if mhits and not self.jumping:
             # play sound only when space bar is hit and while not jumping
             self.game.jump_sound[choice([0,1])].play()
             # tell the program that player is currently jumping

@@ -13,8 +13,6 @@ Main Developments for this game:
 - Create Moving Platforms
     - I created the new class in sprites, as well as the new variables in settings,
       and altered the code for platforms in main to make them slide on the screen.
-    - Important Side Note: You can jump on them around 90% of the time, the other 10% it 
-      cannot jump.
 - Creating Coins
     - I created Gold and Silver Coin classes in sprites, and gave them different scoring systems.
       Gold is worth more in my game than silver, this was done in my settings page. 
@@ -29,7 +27,7 @@ Main Developments for this game:
     - Other than the powerup and jump sounds, all of the other sounds are different. The citations for these are found 
       above.                                                                                                                                                                                                                                
 - Bugs
-    - As previously mentioned, you can jump off the platforms the majority of the time, but not all of the time. 
+    - None from the code, it generally runs smoothly. 
 '''
 import pygame as pg
 import random
@@ -154,15 +152,25 @@ class Game:
                 self.birdyLeft_sound.play()
 
         # check to see if player can jump - if falling from either type of platform
-        # important note, I tried editing the {if hits} code for {if mhits},
-        # but jumping on the {if mhits} was sporadic, sometimes it was successful,
-        # othertimes it was not
+        #Check to see if player 1 is on the moving platform 
         if self.player.vel.y > 0:
-            hits = pg.sprite.spritecollide(self.player, self.platforms, False)
             mhits = pg.sprite.spritecollide(self.player, self.movingplatform, False)
+            if mhits:
+                find_mlowest = mhits[0]
+            for mhit in mhits:
+                if mhit.rect.bottom > find_mlowest.rect.bottom: 
+                    print("mhit rect bottom")
+                    find_mlowest = mhit
+                if self.player.pos.x < find_mlowest.rect.right + 10 and self.player.pos.x > find_mlowest.rect.left - 10: 
+                    if self.player.pos.y < find_mlowest.rect.centery:
+                        self.player.pos.y = find_mlowest.rect.top
+                        self.player.vel.y = 0
+                        self.player.jumping = False
+            #Check to see if player 1 is on the regular platform
+            hits = pg.sprite.spritecollide(self.player, self.platforms, False)
             if hits:
                 # set var to be current hit in list to find which to 'pop' to when two or more collide with player
-                    find_lowest = hits[0]
+                find_lowest = hits[0]
             for hit in hits:
                 if hit.rect.bottom > find_lowest.rect.bottom:
                     print("hit rect bottom " + str(hit.rect.bottom))
@@ -172,17 +180,7 @@ class Game:
                             self.player.pos.y = find_lowest.rect.top
                             self.player.vel.y = 0
                             self.player.jumping = False 
-            #Check to see if player 1 is on the moving platform 
-            if mhits:
-                find_mlowest = mhits[0]
-            for mhit in mhits:
-                if mhit.rect.bottom > find_mlowest.rect.bottom: 
-                    find_mlowest = mhit
-                if self.player.pos.x < find_mlowest.rect.right + 10 and self.player.pos.x > find_mlowest.rect.left - 10: 
-                    if self.player.pos.y < find_mlowest.rect.centery:
-                        self.player.pos.y = find_mlowest.rect.top
-                        self.player.vel.y = 0
-                        self.player.jumping = False
+            
         if self.player.rect.top <= HEIGHT / 4:
             # creates slight scroll at the top based on player y velocity
             self.player.pos.y += max(abs(self.player.vel.y), 2)
