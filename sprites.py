@@ -71,9 +71,7 @@ class Player(Sprite):
     def update(self):
         self.animate()
         self.acc = vec(0, PLAYER_GRAV)
-        # print("acc " + str(self.acc))
-        # print("vel " + str(self.vel))
-
+        #Sets Player Acceleration
         keys = pg.key.get_pressed()
         if keys[pg.K_LEFT]:
             self.acc.x = -PLAYER_ACC
@@ -144,6 +142,7 @@ class Player(Sprite):
                 self.rect.bottom = bottom
 
 
+#Regular Platform Class
 class Platform(Sprite):
     def __init__(self, game, x, y):
         # allows layering in LayeredUpdates sprite group
@@ -152,18 +151,17 @@ class Platform(Sprite):
         self.groups = game.all_sprites, game.platforms
         Sprite.__init__(self, self.groups)
         self.game = game
+        #Gets the images for each of the platforms
         images = [self.game.spritesheet.get_image(0, 288, 380, 94), 
                   self.game.spritesheet.get_image(213, 1662, 201, 100),
                   self.game.spritesheet.get_image(0, 672, 380, 94),
                   self.game.spritesheet.get_image(208, 1879, 201, 100)]
         self.image = random.choice(images)
         self.image.set_colorkey(BLACK)
-        '''leftovers from random rectangles before images'''
-        # self.image = pg.Surface((w,h))
-        # self.image.fill(WHITE)
         self.rect = self.image.get_rect()
         self.rect.x = x
         self.rect.y = y
+        #Allows for various powerups and enemies to spawn on the platforms
         if random.randrange(100) < POW_SPAWN_PCT:
             Pow(self.game, self)
         if random.randrange(100) < COIN_SPAWN_PCT:
@@ -173,6 +171,40 @@ class Platform(Sprite):
         if random.randrange(100) < COIN_SPAWN_PCT:
             Cactus(self.game, self)
 
+#Moving Platform Class
+class MovingPlatform(Sprite):
+    def __init__(self, game, x, y):
+        # allows layering in LayeredUpdates sprite group
+        self._layer = MOVINGPFORM_LAYER
+        # add Platforms to game groups when instantiated
+        self.groups = game.all_sprites, game.movingplatform
+        Sprite.__init__(self, self.groups)
+        self.game = game
+        #images for the moving platform class
+        images = [self.game.spritesheet.get_image(0, 288, 380, 94), 
+                  self.game.spritesheet.get_image(213, 1662, 201, 100),
+                  self.game.spritesheet.get_image(0, 672, 380, 94),
+                  self.game.spritesheet.get_image(208, 1879, 201, 100)]
+        self.image = random.choice(images)
+        self.image.set_colorkey(BLACK)
+        self.rect = self.image.get_rect()
+        self.rect.x = randrange(WIDTH - self.rect.width)
+        self.rect.y = randrange(-500, -50)
+        self.speed = randrange(1,3)
+        #To spawn either right or left
+        self.speed = randrange(1,3)
+        self.ground_level = False
+    #I intentionally didn't add the powerups to the moving platform
+    #That would make the game too difficult 
+    #Updating the moving platforms class to determine whether player lives
+    def update(self):
+        if self.rect.top > HEIGHT * 2: 
+            self.kill
+        self.rect.x += self.speed
+        if self.rect.x > WIDTH:
+            self.rect.x = -self.rect.width
+
+#Powerups Class 
 class Pow(Sprite):
     def __init__(self, game, plat):
         # allows layering in LayeredUpdates sprite group
@@ -193,6 +225,7 @@ class Pow(Sprite):
         # checks to see if plat is in the game's platforms group so we can kill the powerup instance
         if not self.game.platforms.has(self.plat):
             self.kill()
+
 #Class for the silver coin
 class Coin(Sprite):
     def __init__(self, game, plat):
@@ -237,6 +270,7 @@ class Gold(Sprite):
         if not self.game.platforms.has(self.plat):
             self.kill()
 
+#Class for the Cactus 
 class Cactus(Sprite):
     def __init__(self, game, plat):
         # allows layering in LayeredUpdates sprite group
@@ -258,6 +292,7 @@ class Cactus(Sprite):
         if not self.game.platforms.has(self.plat):
             self.kill()
 
+#Class for the Mob Sprites in the game 
 class Mob(Sprite):
     def __init__(self, game):
         # allows layering in LayeredUpdates sprite group
